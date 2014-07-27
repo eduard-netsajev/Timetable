@@ -16,12 +16,7 @@ public final class TTableFragment extends Fragment {
     public static TTableFragment newInstance(String content) {
         TTableFragment fragment = new TTableFragment();
 
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < 20; i++) {
-            builder.append(content).append(" ");
-        }
-        builder.deleteCharAt(builder.length() - 1);
-        fragment.mContent = builder.toString();
+        fragment.mContent = "Today is " + content;
 
         return fragment;
     }

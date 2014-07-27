@@ -63,6 +63,9 @@ public class CirclePageIndicator extends View implements PageIndicator {
     private int mActivePointerId = INVALID_POINTER;
     private boolean mIsDragging;
 
+    private int day_count = 6;
+    private int week_count = 2;
+
 
     public CirclePageIndicator(Context context) {
         this(context, null);
@@ -201,7 +204,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
         if (mViewPager == null) {
             return;
         }
-        final int count = mViewPager.getAdapter().getCount();
+        final int count = mViewPager.getAdapter().getCount()/10001;
         if (count == 0) {
             return;
         }
@@ -231,7 +234,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
         final float shortOffset = shortPaddingBefore + mRadius;
         float longOffset = longPaddingBefore + mRadius;
         if (mCentered) {
-            longOffset += ((longSize - longPaddingBefore - longPaddingAfter) / 2.0f) - ((count * threeRadius) / 2.0f);
+            longOffset += ((longSize - longPaddingBefore - longPaddingAfter) / 2.0f) - ((count/week_count * threeRadius) / 2.0f);
         }
 
         float dX;
@@ -243,11 +246,18 @@ public class CirclePageIndicator extends View implements PageIndicator {
         }
 
         //Draw stroked circles
+        //TODO count = number of circles
         for (int iLoop = 0; iLoop < count; iLoop++) {
             float drawLong = longOffset + (iLoop * threeRadius);
             if (mOrientation == HORIZONTAL) {
                 dX = drawLong;
                 dY = shortOffset;
+                if (iLoop <day_count) {
+                    dY -= threeRadius;
+                }
+                else{
+                    dX -= day_count * threeRadius;
+                }
             } else {
                 dX = shortOffset;
                 dY = drawLong;
@@ -265,12 +275,20 @@ public class CirclePageIndicator extends View implements PageIndicator {
 
         //Draw the filled circle according to the current scroll
         float cx = (mSnap ? mSnapPage : mCurrentPage) * threeRadius;
+
         if (!mSnap) {
             cx += mPageOffset * threeRadius;
         }
+        //TODO filled circle drawing
         if (mOrientation == HORIZONTAL) {
             dX = longOffset + cx;
             dY = shortOffset;
+            if (cx / threeRadius <day_count) {
+                dY -= threeRadius;
+            }
+            else{
+                dX -= day_count * threeRadius;
+            }
         } else {
             dX = shortOffset;
             dY = longOffset + cx;
@@ -409,7 +427,8 @@ public class CirclePageIndicator extends View implements PageIndicator {
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-        mCurrentPage = position;
+        //TODO check % 6 part
+        mCurrentPage = position % 12;
         mPageOffset = positionOffset;
         invalidate();
 
