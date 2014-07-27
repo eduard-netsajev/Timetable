@@ -11,7 +11,7 @@ import android.support.v4.app.FragmentActivity;
 public class Timetable extends FragmentActivity {
     private static final Random RANDOM = new Random();
 
-    TestFragmentAdapter mAdapter;
+    TTableFragmentAdapter mAdapter;
     ViewPager mPager;
     PageIndicator mIndicator;
 
@@ -51,7 +51,7 @@ public class Timetable extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.simple_circles);
 
-        mAdapter = new TestFragmentAdapter(getSupportFragmentManager());
+        mAdapter = new TTableFragmentAdapter(getSupportFragmentManager());
 
         mPager = (ViewPager)findViewById(R.id.pager);
         mPager.setAdapter(mAdapter);

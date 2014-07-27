@@ -5,7 +5,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 
-class TestFragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapter {
+class TTableFragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapter {
     protected static final String[] CONTENT = new String[] { "This", "Is", "A", "Test", };
     protected static final int[] ICONS = new int[] {
             R.drawable.perm_group_calendar,
@@ -16,13 +16,13 @@ class TestFragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapt
 
     private int mCount = CONTENT.length;
 
-    public TestFragmentAdapter(FragmentManager fm) {
+    public TTableFragmentAdapter(FragmentManager fm) {
         super(fm);
     }
 
     @Override
     public Fragment getItem(int position) {
-        return TestFragment.newInstance(CONTENT[position % CONTENT.length]);
+        return TTableFragment.newInstance(CONTENT[position % CONTENT.length]);
     }
 
     @Override
@@ -32,7 +32,7 @@ class TestFragmentAdapter extends FragmentPagerAdapter implements IconPagerAdapt
 
     @Override
     public CharSequence getPageTitle(int position) {
-      return TestFragmentAdapter.CONTENT[position % CONTENT.length];
+      return TTableFragmentAdapter.CONTENT[position % CONTENT.length];
     }
 
     @Override
