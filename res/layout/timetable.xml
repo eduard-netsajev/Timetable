@@ -24,7 +24,7 @@
             android:id="@+id/textViewGrupp"
             android:layout_gravity="center"
             android:textColor="#6e0234"
-            android:textSize="28dp" />
+            android:textSize="28sp" />
     </TableRow>
 
     <TableRow
@@ -35,7 +35,7 @@
 
         <Spinner
             android:layout_width="0dp"
-            android:layout_weight="0.2"
+            android:layout_weight="0.25"
             android:layout_height="wrap_content"
             android:id="@+id/faculty_spinner"
             android:spinnerMode="dropdown"
@@ -47,7 +47,7 @@
         <Spinner
 
             android:layout_width="0dp"
-            android:layout_weight="0.5"
+            android:layout_weight="0.45"
             android:layout_height="wrap_content"
             android:id="@+id/groups_spinner"
             android:spinnerMode="dropdown"
@@ -68,12 +68,13 @@
 
         <ImageButton
             android:id="@+id/lock"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
+            android:layout_width="35dp"
+            android:layout_height="wrap_content"
             android:src="@drawable/lockopened"
             android:scaleType="centerCrop"
             android:adjustViewBounds="true"
             android:layout_gravity="left|bottom"
+            android:paddingRight="10dp"
             android:includeFontPadding="false"
             android:background="@drawable/clear_button_background"
             />
