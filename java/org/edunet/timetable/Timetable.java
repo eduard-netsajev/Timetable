@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -22,7 +21,7 @@ public class Timetable extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.simple_circles);
+        setContentView(R.layout.timetable);
 
         mAdapter = new TTableFragmentAdapter(getSupportFragmentManager());
 
@@ -38,11 +37,11 @@ public class Timetable extends FragmentActivity {
         int dayOfWeek = today.get(Calendar.DAY_OF_WEEK) - 1;//returns int Day of Week
 
         boolean evenWeek;
-        if (today.get(Calendar.WEEK_OF_YEAR) % 2 == 0) {
-            evenWeek = false;
-        } else {
-            evenWeek = true;
-        }
+        //Doesn't mean truly even week of the year
+        //Must be even/odd according to TTU schedule
+        //In future, can be reworked to work so that
+        //1st of September is first odd week and counting from there
+        evenWeek = today.get(Calendar.WEEK_OF_YEAR) % 2 != 0;
 
         if (dayOfWeek == 0) {
         dayOfWeek++;

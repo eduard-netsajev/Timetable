@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-    <style name="Theme.PageIndicatorDefaults" parent="android:Theme">
+    <!--style name="Theme.PageIndicatorDefaults" parent="android:Theme">
         <item name="vpiIconPageIndicatorStyle">@style/Widget.IconPageIndicator</item>
         <item name="vpiTabPageIndicatorStyle">@style/Widget.TabPageIndicator</item>
-    </style>
+    </style-->
 
     <style name="Widget">
     </style>

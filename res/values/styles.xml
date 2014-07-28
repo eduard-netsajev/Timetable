@@ -2,18 +2,50 @@
 
 <resources>
     <style name="StyledIndicators" parent="@android:style/Theme.Light">
-        <item name="vpiCirclePageIndicatorStyle">@style/CustomCirclePageIndicator</item>
+        <item name="CirclePageIndicatorStyle">@style/CirclePageIndicatorStyle</item>
     </style>
-    <style name="AppTheme" parent="android:Theme.Holo">
-        <!-- item name="android:background">#1361CC</item -->
+    <style name="AppTheme" parent="@android:style/Theme.Holo.Light">
+        <item name="CirclePageIndicatorStyle">@style/CirclePageIndicatorStyleTTU</item>
+        <item name="android:textColor">#FF6E0234</item>
+        <item name="android:textSize">28sp</item>
     </style>
 
-    <style name="CustomCirclePageIndicator">
-        <item name="fillColor">#FF888888</item>
+    <style name="CirclePageIndicatorStyle">
+        <item name="fillColor">#FFB8B8B8</item>
         <item name="strokeColor">#FF000000</item>
         <item name="strokeWidth">2dp</item>
         <item name="radius">10dp</item>
         <item name="centered">true</item>
+    </style>
+
+    <style name="CirclePageIndicatorStyleTTU">
+        <item name="fillColor">#FF903E64</item>
+        <item name="strokeColor">#FF6E0234</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="radius">10dp</item>
+        <item name="centered">true</item>
+    </style>
+    <!--item name="fillColor">#FF888888</item>
+    <item name="strokeColor">#FF000000</item-->
+
+    <!-- Tunniplaan old styles-->
+
+    <style name="TTUtheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:textColor">#6e0234</item>
+        <item name="android:background">#B9B9B9</item>
+    </style>
+
+    <style name="TTUthemeDialog" parent="@android:style/Theme.Holo.Light.Dialog">
+        <item name="android:windowTitleStyle">@style/dialog_title_style</item>
+        <item name="android:textColor">#6e0234</item>
+        <item name="android:textSize">20sp</item>
+
+    </style>
+    <style name="dialog_title_style">
+        <item name="android:background">#B9B9B9</item>
+        <item name="android:textColor">#6e0234</item>
+        <item name="android:textSize">25sp</item>
+        <item name="android:padding">5dp</item>
     </style>
 
 </resources>

@@ -72,7 +72,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
     }
 
     public CirclePageIndicator(Context context, AttributeSet attrs) {
-        this(context, attrs, R.attr.vpiCirclePageIndicatorStyle);
+        this(context, attrs, R.attr.CirclePageIndicatorStyle);
     }
 
     public CirclePageIndicator(Context context, AttributeSet attrs, int defStyle) {
@@ -252,10 +252,8 @@ public class CirclePageIndicator extends View implements PageIndicator {
             if (mOrientation == HORIZONTAL) {
                 dX = drawLong;
                 dY = shortOffset;
-                if (iLoop <day_count) {
-                    dY -= threeRadius;
-                }
-                else{
+                if (iLoop >= day_count) {
+                    dY += threeRadius;
                     dX -= day_count * threeRadius;
                 }
             } else {
@@ -283,11 +281,9 @@ public class CirclePageIndicator extends View implements PageIndicator {
         if (mOrientation == HORIZONTAL) {
             dX = longOffset + cx;
             dY = shortOffset;
-            if (cx / threeRadius <day_count) {
-                dY -= threeRadius;
-            }
-            else{
+            if (cx / threeRadius >= day_count) {
                 dX -= day_count * threeRadius;
+                dY += threeRadius;
             }
         } else {
             dX = shortOffset;
@@ -463,9 +459,9 @@ public class CirclePageIndicator extends View implements PageIndicator {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (mOrientation == HORIZONTAL) {
-            setMeasuredDimension(measureLong(widthMeasureSpec), measureShort(heightMeasureSpec));
+            setMeasuredDimension(measureLong(widthMeasureSpec), measureShort(heightMeasureSpec)*2);
         } else {
-            setMeasuredDimension(measureShort(widthMeasureSpec), measureLong(heightMeasureSpec));
+            setMeasuredDimension(measureShort(widthMeasureSpec)*2, measureLong(heightMeasureSpec));
         }
     }
 

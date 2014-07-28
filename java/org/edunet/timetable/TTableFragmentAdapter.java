@@ -22,7 +22,6 @@ class TTableFragmentAdapter extends FragmentPagerAdapter {
         return TTableFragment.newInstance(CONTENT[position % CONTENT.length]);
     }
 
-
     @Override
     public int getCount() {
         return mCount;

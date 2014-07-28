@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:theme="@style/AppTheme"
+    tools:context=".Timetable">
+
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:paddingLeft="5dp">
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/your_group"
+            android:id="@+id/textViewGrupp"
+            android:layout_gravity="center"
+            android:textColor="#6e0234"
+            android:textSize="28dp" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:paddingLeft="5dp">
+
+        <Spinner
+            android:layout_width="0dp"
+            android:layout_weight="0.2"
+            android:layout_height="wrap_content"
+            android:id="@+id/faculty_spinner"
+            android:spinnerMode="dropdown"
+            android:entries="@array/groupsID_array"
+            android:clickable="true"
+            android:focusable="false"
+            android:background="@drawable/spinner_default_edunet" />
+
+        <Spinner
+
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="wrap_content"
+            android:id="@+id/groups_spinner"
+            android:spinnerMode="dropdown"
+            android:entries="@array/groups_array"
+            android:clickable="true"
+            android:focusable="false"
+            android:background="@drawable/spinner_default_edunet" />
+        <Spinner
+            android:layout_width="0dp"
+            android:layout_weight="0.3"
+            android:layout_height="wrap_content"
+            android:id="@+id/groupsID_spinner"
+            android:spinnerMode="dropdown"
+            android:entries="@array/groupsID_array"
+            android:clickable="true"
+            android:focusable="false"
+            android:background="@drawable/spinner_default_edunet" />
+
+        <ImageButton
+            android:id="@+id/lock"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@drawable/lockopened"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true"
+            android:layout_gravity="left|bottom"
+            android:includeFontPadding="false"
+            android:background="@drawable/clear_button_background"
+            />
+
+    </TableRow>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        />
+    <org.edunet.timetable.CirclePageIndicator
+        android:id="@+id/indicator"
+        android:padding="10dp"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        />
+</LinearLayout>
