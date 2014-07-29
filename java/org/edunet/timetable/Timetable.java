@@ -12,7 +12,6 @@ import java.util.Random;
 import android.support.v4.app.FragmentActivity;
 
 public class Timetable extends FragmentActivity {
-    private static final Random RANDOM = new Random();
 
     TTableFragmentAdapter mAdapter;
     ViewPager mPager;
@@ -55,7 +54,6 @@ public class Timetable extends FragmentActivity {
         }
         mPager.setCurrentItem(initialPage);
 
-
         //We set this on the indicator, NOT the pager
         mIndicator.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -83,8 +81,7 @@ public class Timetable extends FragmentActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.random:
-                int page = RANDOM.nextInt(mAdapter.getCount());
-                page = 4;
+                int page = 4;
                 mPager.setCurrentItem(page);
                 return true;
             /*

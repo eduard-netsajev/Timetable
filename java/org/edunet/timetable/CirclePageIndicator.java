@@ -292,6 +292,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
         canvas.drawCircle(dX, dY, mRadius, mPaintFill);
     }
 
+    //Function responsible for touching on indicator's side areas
     public boolean onTouchEvent(android.view.MotionEvent ev) {
         if (super.onTouchEvent(ev)) {
             return true;
@@ -332,18 +333,19 @@ public class CirclePageIndicator extends View implements PageIndicator {
             case MotionEvent.ACTION_UP:
                 if (!mIsDragging) {
                     final int count = mViewPager.getAdapter().getCount();
+                    final int currentPage = mViewPager.getCurrentItem();
                     final int width = getWidth();
                     final float halfWidth = width / 2f;
                     final float sixthWidth = width / 6f;
 
-                    if ((mCurrentPage > 0) && (ev.getX() < halfWidth - sixthWidth)) {
+                    if ((currentPage > 0) && (ev.getX() < halfWidth - sixthWidth)) {
                         if (action != MotionEvent.ACTION_CANCEL) {
-                            mViewPager.setCurrentItem(mCurrentPage - 1);
+                            mViewPager.setCurrentItem(currentPage - 1);
                         }
                         return true;
                     } else if ((mCurrentPage < count - 1) && (ev.getX() > halfWidth + sixthWidth)) {
                         if (action != MotionEvent.ACTION_CANCEL) {
-                            mViewPager.setCurrentItem(mCurrentPage + 1);
+                            mViewPager.setCurrentItem(currentPage+1);
                         }
                         return true;
                     }
