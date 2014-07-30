@@ -1,8 +1,16 @@
 package org.edunet.timetable;
 
+
+import android.app.ProgressDialog;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.widget.ListView;
+
+import org.json.JSONArray;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 class TTableFragmentAdapter extends FragmentPagerAdapter {
@@ -12,6 +20,7 @@ class TTableFragmentAdapter extends FragmentPagerAdapter {
     };
 
     private int mCount = CONTENT.length*10001;
+
 
     public TTableFragmentAdapter(FragmentManager fm) {
         super(fm);
