@@ -41,10 +41,8 @@ public class Timetable extends FragmentActivity {
     ArrayAdapter<String> programAdapt;
     ArrayAdapter<String> facultyAdapt;
 
+    String total_group;
     //////////////////////////
-
-
-
 
     private ProgressDialog pDialog;
 
@@ -184,7 +182,7 @@ public class Timetable extends FragmentActivity {
                     @Override
                     public void run() {
 
-//stuff that updates ui
+    //stuff that updates ui
 
                         spinnerFaculties = (Spinner) findViewById(R.id.faculty_spinner);
                         spinnerPrograms = (Spinner) findViewById(R.id.groups_spinner);
@@ -205,7 +203,7 @@ public class Timetable extends FragmentActivity {
                         spinnerFaculties.setOnItemSelectedListener(new OnItemSelectedListener() {
                             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                                 //UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
-                                UpdateSpinners();
+                                UpdateSpinners(1);
 
                                 //TODO
                               //  programAdapt.clear();
@@ -219,7 +217,7 @@ public class Timetable extends FragmentActivity {
                         spinnerPrograms.setOnItemSelectedListener(new OnItemSelectedListener() {
                             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                                 // UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
-                                UpdateSpinners();
+                                UpdateSpinners(2);
                             }
 
                             public void onNothingSelected(AdapterView<?> parent) {
@@ -229,6 +227,7 @@ public class Timetable extends FragmentActivity {
                         spinnerGroupsIDs.setOnItemSelectedListener(new OnItemSelectedListener() {
                             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                                 // UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
+                               // UpdateSpinners(3);
                             }
                             public void onNothingSelected(AdapterView<?> parent) {
                             }
@@ -322,47 +321,77 @@ public class Timetable extends FragmentActivity {
     }
 
     //FUNCTIONS
-    public void UpdateSpinners(){
-//TODO updating fields depending on what was selected (i.e. if select program, not update programs)
+    public void UpdateSpinners(int spinner) {
 
         String chosenFaculty = (String) spinnerFaculties.getSelectedItem();
-        Log.d("Fac > ", chosenFaculty);
 
+        if (spinner == 1) {
+            populatePrograms(chosenFaculty);
+        }
+        else if (spinner == 2){
+            String chosenProgram = (String) spinnerPrograms.getSelectedItem();
+            populateGroups(chosenFaculty, chosenProgram);
+        }
+    }
+
+    public void populatePrograms(String chosenFaculty){
+
+        spinnerPrograms.setSelection(0);
         programAdapt.clear();
 
         ArrayList<String> programList = new ArrayList<String>();
-        for(Map.Entry<String,List<String>> map : spinners_members.get(chosenFaculty).entrySet()){
+        for (Map.Entry<String, List<String>> map : spinners_members.get(chosenFaculty).entrySet()) {
             programList.add(map.getKey());
         }
         Collections.sort(programList);
-        for(String program : programList){
+        for (String program : programList) {
             programAdapt.add(program);
         }
 
         String chosenProgram = (String) spinnerPrograms.getSelectedItem();
 
-        if(chosenProgram != null){
-
-            Log.d("Prog > ", chosenProgram);
-
-            group_idAdapt.clear();
-            List<String> groupList = new ArrayList<String>();
-            for(String group : spinners_members.get(chosenFaculty).get(chosenProgram)){
-                groupList.add(group);
-            }
-
-            Collections.sort(groupList);
-            for(String group : groupList) {
-                group_idAdapt.add(group);
-            }
-
-            String chosenGroup = (String) spinnerGroupsIDs.getSelectedItem();
-
-            if(chosenGroup != null){
-                Log.d("Group > ", chosenGroup);
-            }
+        if (chosenProgram != null) {
+            populateGroups(chosenFaculty, chosenProgram);
         }
     }
 
+    public void populateGroups(String chosenFaculty, String chosenProgram) {
+
+        String last_group = (String) spinnerGroupsIDs.getSelectedItem();
+
+        spinnerGroupsIDs.setSelection(0);
+        group_idAdapt.clear();
+
+        List<String> groupList = new ArrayList<String>();
+        for (String group : spinners_members.get(chosenFaculty).get(chosenProgram)) {
+            groupList.add(group);
+        }
+
+        Collections.sort(groupList);
+
+        if (last_group != null) {
+            last_group = last_group.substring(0, 1);
+            for (int i = 0; i < groupList.size(); i++) {
+                String group = groupList.get(i);
+                group_idAdapt.add(group);
+                if(group.substring(0, 1).equals(last_group)){
+                    spinnerGroupsIDs.setSelection(i);
+                    last_group = null;
+                }
+            }
+        } else {
+            for (String group : groupList) {
+                group_idAdapt.add(group);
+            }
+        }
+
+        String chosenGroup = (String) spinnerGroupsIDs.getSelectedItem();
+
+        if (chosenGroup != null) {
+            total_group = chosenFaculty + chosenProgram + chosenGroup;
+            Log.d("Group > ", total_group);
+        }
+
+    }
 }
 
