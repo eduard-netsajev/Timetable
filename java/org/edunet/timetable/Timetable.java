@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,7 +51,7 @@ public class Timetable extends FragmentActivity {
     // URL to get GroupsMap JSON
     private final static String groups_map_url = "http://money.vnet.ee/GroupsMap.json";
 
-    Map<String, JSONArray> groups_map = null;
+    Map<String, List<String>> groups_map = null;
 
     HashMap<String, HashMap<String, List<String>>> spinners_members = new HashMap<String, HashMap<String, List<String>>>();
 
@@ -122,20 +123,27 @@ public class Timetable extends FragmentActivity {
                 // Making a request to groups_map_url and getting response
                 String jsonStr = sh.makeServiceCall(groups_map_url, ServiceHandler.GET);
 
-                Log.d("Response: ", "> " + jsonStr);
+               // Log.d("Response: ", "> " + jsonStr);
 
                 if (jsonStr != null) {
                     try {
+                        //Converting hashmap GroupsMap.json into Java object
                         JSONObject GroupsMap = new JSONObject(jsonStr);
-                        // Assume you have a Map<String, String> in JSONObject jdata
                         @SuppressWarnings("unchecked")
                         Iterator<String> nameItr = GroupsMap.keys();
-                        groups_map = new HashMap<String, JSONArray>();
+                        groups_map = new HashMap<String, List<String>>();
                         while(nameItr.hasNext()) {
                             String group = nameItr.next();
-                            //TODO converge JSONArray into List
-                            groups_map.put(group, GroupsMap.getJSONArray(group));
                             groups.add(group);
+
+                            List<String> hashed_classes = new ArrayList<String>();
+                            JSONArray jsonArray = GroupsMap.getJSONArray(group);
+
+                            for (int i=0; i<jsonArray.length(); i++) {
+                                hashed_classes.add(jsonArray.getString(i));
+                            }
+                            groups_map.put(group, hashed_classes);
+
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -144,8 +152,7 @@ public class Timetable extends FragmentActivity {
                     Log.e("ServiceHandler", "Couldn't get any data from the groups_map_url");
                 }
 
-                //TODO chunk groups into hashmap of faculties, programs and groups in 1 iteration
-
+                //chunk groups into hashmap of faculties, programs and groups in 1 iteration
                 for (String group : groups){
                     String faculty_name = group.substring(0, 1);
                     String group_name = group.substring(1, 4);
@@ -183,10 +190,6 @@ public class Timetable extends FragmentActivity {
                         spinnerPrograms = (Spinner) findViewById(R.id.groups_spinner);
                         spinnerGroupsIDs = (Spinner) findViewById(R.id.groupsID_spinner);
 
-                        //TODO check if this is needed here
-                        //              spinnerPrograms.setPadding(10, 0, 0, 0);
-//                spinnerGroupsIDs.setPadding(5, 0, 0, 0);
-
                         group_idAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
                         programAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
                         facultyAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
@@ -201,18 +204,26 @@ public class Timetable extends FragmentActivity {
 
                         spinnerFaculties.setOnItemSelectedListener(new OnItemSelectedListener() {
                             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                // UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
-                            }
+                                //UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
+                                UpdateSpinners();
 
+                                //TODO
+                              //  programAdapt.clear();
+                               // programAdapt.addAll(spinners_members.get(spinnerFaculties.getSelectedItem()).keySet());
+                              //  List<String> programs = spinners_members.get(spinnerFaculties.getSelectedItem()).keySet();
+                            }
+                            //TODO auto select for every spinner
                             public void onNothingSelected(AdapterView<?> parent) {
                             }
                         });
                         spinnerPrograms.setOnItemSelectedListener(new OnItemSelectedListener() {
                             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                                 // UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
+                                UpdateSpinners();
                             }
 
                             public void onNothingSelected(AdapterView<?> parent) {
+                               // UpdateSpinners();
                             }
                         });
                         spinnerGroupsIDs.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -231,22 +242,22 @@ public class Timetable extends FragmentActivity {
                         for (Map.Entry<String, HashMap<String, List<String>>> faculty: spinners_members.entrySet()) {
                            // facultyAdapt.add(faculty.getKey());
                             faculties.add(faculty.getKey());
-                            for (Map.Entry<String, List<String>> program: faculty.getValue().entrySet()) {
+                            //for (Map.Entry<String, List<String>> program: faculty.getValue().entrySet()) {
                                 //programAdapt.add(program.getKey());
-                                groups.add(program.getKey());
-                            }
+                              //  groups.add(program.getKey());
+                            //}
                         }
 
 
                         Collections.sort(faculties);
-                        Collections.sort(groups);
+                        //Collections.sort(groups);
 
                         for(String facul : faculties){
                             facultyAdapt.add(facul);
                         }
-                        for(String group : groups){
-                            programAdapt.add(group);
-                        }
+                       // for(String group : groups){
+                         //   programAdapt.add(group);
+                       // }
 
                     }
 
@@ -311,7 +322,47 @@ public class Timetable extends FragmentActivity {
     }
 
     //FUNCTIONS
+    public void UpdateSpinners(){
+//TODO updating fields depending on what was selected (i.e. if select program, not update programs)
 
+        String chosenFaculty = (String) spinnerFaculties.getSelectedItem();
+        Log.d("Fac > ", chosenFaculty);
+
+        programAdapt.clear();
+
+        ArrayList<String> programList = new ArrayList<String>();
+        for(Map.Entry<String,List<String>> map : spinners_members.get(chosenFaculty).entrySet()){
+            programList.add(map.getKey());
+        }
+        Collections.sort(programList);
+        for(String program : programList){
+            programAdapt.add(program);
+        }
+
+        String chosenProgram = (String) spinnerPrograms.getSelectedItem();
+
+        if(chosenProgram != null){
+
+            Log.d("Prog > ", chosenProgram);
+
+            group_idAdapt.clear();
+            List<String> groupList = new ArrayList<String>();
+            for(String group : spinners_members.get(chosenFaculty).get(chosenProgram)){
+                groupList.add(group);
+            }
+
+            Collections.sort(groupList);
+            for(String group : groupList) {
+                group_idAdapt.add(group);
+            }
+
+            String chosenGroup = (String) spinnerGroupsIDs.getSelectedItem();
+
+            if(chosenGroup != null){
+                Log.d("Group > ", chosenGroup);
+            }
+        }
+    }
 
 }
 

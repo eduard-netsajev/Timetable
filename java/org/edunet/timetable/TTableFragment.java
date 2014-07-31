@@ -123,7 +123,7 @@ public final class TTableFragment extends ListFragment {
             // Making a request to url and getting response
             String jsonStr = sh.makeServiceCall(url, ServiceHandler.GET);
 
-            Log.d("Response: ", "> " + jsonStr);
+           // Log.d("Response: ", "> " + jsonStr);
 
             if (jsonStr != null) {
                 try {
