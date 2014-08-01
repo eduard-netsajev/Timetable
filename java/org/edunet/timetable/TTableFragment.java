@@ -49,7 +49,7 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
     public Context context;
 
 
-    private ProgressDialog pDialog;
+  //  private ProgressDialog pDialog;
 
     List<Lesson> lessons_today = new ArrayList<Lesson>();
     ClassListArrayAdapter ListAdapter;
@@ -64,15 +64,15 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
         activityCommunicator =(ActivityCommunicator)context;
     }
 
-    public static TTableFragment newInstance(String content) {
+    public static TTableFragment newInstance(int content) {
         TTableFragment fragment = new TTableFragment();
 
-        fragment.mContent = "Today is " + content;
+        fragment.mContent = content;
 
         return fragment;
     }
 
-    private String mContent = "???";
+    private int mContent = -1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -85,7 +85,6 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
        // if ((savedInstanceState != null) && savedInstanceState.containsKey(KEY_CONTENT)) {
        //     mContent = savedInstanceState.getString(KEY_CONTENT);
      //   }
-
         new GetContacts().execute();
 
     }
@@ -130,10 +129,10 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
             super.onPreExecute();
             // Showing progress dialog
 
-            pDialog = new ProgressDialog(context);
-            pDialog.setMessage("Please wait...");
-            pDialog.setCancelable(false);
-            pDialog.show();
+          //  pDialog = new ProgressDialog(context);
+          //  pDialog.setMessage("Please wait...");
+          //  pDialog.setCancelable(false);
+          //  pDialog.show();
 
         }
 
@@ -147,8 +146,8 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
         protected void onPostExecute(Void result) {
             super.onPostExecute(result);
             // Dismiss the progress dialog
-            if (pDialog.isShowing())
-                pDialog.dismiss();
+          //  if (pDialog.isShowing())
+          //      pDialog.dismiss();
             /**
              * Updating parsed JSON data into ListView
              * */
@@ -159,9 +158,6 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
             setListAdapter(ListAdapter);
 
             ListView lv = getListView();
-
-
-            //ListView day_list = (ListView) view.findViewById(R.id.list);
 
             // Listview on item click listener
             lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -179,68 +175,55 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
     }
 
     @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            ((Timetable)context).fragmentCommunicator = this;
+        }
+    }
+
+    @Override
         public void onResume() {
             super.onResume();
-            lessons_today =((Timetable)context).lessons;
+        lessons_today = new ArrayList<Lesson>();
 
-
-
-            //        textView.setText(activityAssignedValue);
+        List<Lesson> lessons_all =((Timetable)context).lessons;
+        for(Lesson lesson : lessons_all){
+            if(lesson == null){
+                //if this happens, means that GroupsMap is not for this ClassData
+                //i.e. there is no lesson with given hash code
+                Log.d("Another ", "Null lesson");
+            }
+            else if(HelperFunctions.ThisDay(lesson, mContent)){
+                lessons_today.add(lesson);
+            }
         }
+        if(ListAdapter != null) {
+            ListAdapter.clear();
+            ListAdapter.addAll(lessons_today);
+        }
+        }
+
     //FragmentCommunicator interface implementation
     @Override
     public void passDataToFragment(String someValue){
         activityAssignedValue = someValue;
-        // textView.setText(activityAssignedValue);
     }
-
-
-
-    ////////////////////
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-
-       /* RelativeLayout layout = new RelativeLayout(context);
-
-        ClassView text = new ClassView(context);
-        text.setClassName("Name");
-        text.setClassType("Type");
-        text.setStartTime("StartTime");
-        text.setClassRoom("Room");
-
-        layout.addView(text);
-
-        return layout;
-*/
-
-//        View view = inflater.inflate(R.layout.fragment_timetable, null);
-
-        //ListView day_list = (ListView) view.findViewById(R.id.list);
-
-
-        setRetainInstance(true);
+         setRetainInstance(true);
 
         return inflater.inflate(R.layout.fragment_timetable, container, false);
 
     }
 
-    /*
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        setRetainInstance(true);
-        return inflater.inflate(R.layout.fragment_timetable, container, false);
-
-    }*/
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        //outState.putString(KEY_CONTENT, mContent);
         outState.putString(STRING_VALUE,activityAssignedValue);
     }
 }
@@ -276,10 +259,6 @@ class ClassListArrayAdapter extends ArrayAdapter<Lesson> {
         } else {
             classView = (ClassView) convertView;
         }
-        if(currentListItem != null){
-            Log.d("Null", currentListItem.toString());
-            //return classView;
-        }
 
         //Set ClassName field text to currentListItem.ClassName
         classView.setClassName(currentListItem.getName());
@@ -307,12 +286,6 @@ class ClassView extends LinearLayout {
     public ClassView(Context context) {
         super(context);
 
-    //    LayoutInflater inflater =
-                //LayoutInflater.from(context);//getLayoutInflater();
-        //inflater.inflate(R.layout.fragment_timetable, container, false);
-
-      //  inflater.inflate(R.layout.list_item, this);
-        Log.d("I WAS HERE > ", "YEA");
         LayoutInflater.from(context).inflate(R.layout.list_item, this);
 
         this.StartTime = (TextView) findViewById(R.id.name);

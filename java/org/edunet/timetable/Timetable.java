@@ -35,7 +35,7 @@ import org.edunet.timetable.Lesson;
 public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
     public void passDataToActivity(String someValue){
-        int i = 5;
+        Log.d("passDataToActovity -> ", someValue);
     }
 
     ///////////////
@@ -75,7 +75,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     List<String> groups = new ArrayList<String>();
 
     List<Lesson> lessons = new ArrayList<Lesson>();
-
     //////////////////////////
 
 
@@ -103,7 +102,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         mIndicator.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
-                //Toast.makeText(Timetable.this, "Changed to page " + position, Toast.LENGTH_SHORT).show();
+                //TODO
             }
 
             @Override
@@ -441,8 +440,12 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             for (String hash : ClassHashes) {
                 lessons.add(TimeTable.get(hash));
             }
+            //TODO refresh pages
+            if(fragmentCommunicator != null) {
+               mAdapter.notifyDataSetChanged();
+               // fragmentCommunicator.passDataToFragment("Hell yeah, update dem pages");
+            }
         }
-
     }
 
     public String loadJSONFromAsset(String filename) {

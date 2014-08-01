@@ -14,9 +14,9 @@ import java.util.HashMap;
 
 
 class TTableFragmentAdapter extends FragmentPagerAdapter {
-    protected static final String[] CONTENT = new String[] {
-            "E1", "T1", "K1", "N1", "R1", "L1",
-            "E2", "T2", "K2", "N2", "R2", "L2"
+    protected static final int[] CONTENT = new int[] {
+            10, 11, 12, 13, 14, 15,
+            20, 21, 22, 23, 24, 25
     };
 
     private int mCount = CONTENT.length*10001;
@@ -32,6 +32,19 @@ class TTableFragmentAdapter extends FragmentPagerAdapter {
     }
 
     @Override
+    public int getItemPosition(Object item) {
+        //this shit makes notifyDataSetChanged work
+        /*
+        By default, getItemPosition() returns POSITION_UNCHANGED, which means,
+        "This object is fine where it is, don't destroy or remove it."
+        Returning POSITION_NONE fixes the problem by instead saying,
+        "This object is no longer an item I'm displaying, remove it."
+        So it has the effect of removing and recreating every single item in your adapter.
+         */
+        return POSITION_NONE;
+    }
+
+    @Override
     public int getCount() {
         return mCount;
     }
@@ -39,7 +52,7 @@ class TTableFragmentAdapter extends FragmentPagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-      return TTableFragmentAdapter.CONTENT[position % CONTENT.length];
+      return ""+TTableFragmentAdapter.CONTENT[position % CONTENT.length];
     }
 
     /*

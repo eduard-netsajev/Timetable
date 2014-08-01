@@ -35,4 +35,14 @@ public class HelperFunctions {
         }
         return initialPage;
     }
+
+    public static boolean ThisDay(Lesson lesson, int day){
+        if(lesson.getWeeks() == 1 && day > 17){
+            return false;
+        }
+        if(lesson.getWeeks() == 2 && day < 17){
+            return false;
+        }
+        return day % 10 == lesson.getDay();
+    }
 }
