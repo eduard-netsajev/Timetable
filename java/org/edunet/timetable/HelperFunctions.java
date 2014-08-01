@@ -34,6 +34,5 @@ public class HelperFunctions {
             initialPage += 6;
         }
         return initialPage;
-
     }
 }

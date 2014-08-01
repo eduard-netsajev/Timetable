@@ -1,15 +1,18 @@
 package org.edunet.timetable;
 
 import android.app.ProgressDialog;
+import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,8 +30,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Timetable extends FragmentActivity {
+import org.edunet.timetable.Lesson;
 
+public class Timetable extends FragmentActivity implements ActivityCommunicator{
+
+    public void passDataToActivity(String someValue){
+        int i = 5;
+    }
+
+    ///////////////
+    //interface through which communication is made to fragment
+    public FragmentCommunicator fragmentCommunicator;
+   // private CustomAdapter customAdapter;
+    public static ArrayList<Fragment> listFragments;
+    //////////////
     TTableFragmentAdapter mAdapter;
     ViewPager mPager;
     PageIndicator mIndicator;
@@ -41,19 +56,25 @@ public class Timetable extends FragmentActivity {
     ArrayAdapter<String> programAdapt;
     ArrayAdapter<String> facultyAdapt;
 
-    String total_group;
+    String selectedGroup = "";
+
+    Typeface tf;
     //////////////////////////
 
     private ProgressDialog pDialog;
 
     // URL to get GroupsMap JSON
     private final static String groups_map_url = "http://money.vnet.ee/GroupsMap.json";
-
-    Map<String, List<String>> groups_map = null;
+    private final static String class_data_url = "http://money.vnet.ee/ClassData.json";
 
     HashMap<String, HashMap<String, List<String>>> spinners_members = new HashMap<String, HashMap<String, List<String>>>();
+    Map<String, List<String>> groups_map = null;
+    HashMap<String, Lesson> TimeTable;
 
+    List<String> ClassHashes = new ArrayList<String>();
     List<String> groups = new ArrayList<String>();
+
+    List<Lesson> lessons = new ArrayList<Lesson>();
 
     //////////////////////////
 
@@ -63,6 +84,7 @@ public class Timetable extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.timetable);
 
+        tf = Typeface.createFromAsset(getAssets(),"Andada-Regular.ttf");
         mAdapter = new TTableFragmentAdapter(getSupportFragmentManager());
 
         mPager = (ViewPager) findViewById(R.id.pager);
@@ -95,8 +117,7 @@ public class Timetable extends FragmentActivity {
 
     }
 
-
-        /**
+    /**
          * Async task class to get json by making HTTP call
          * */
         public class GetGroupsMap extends AsyncTask<Void, Void, Void> {
@@ -115,13 +136,71 @@ public class Timetable extends FragmentActivity {
 
             @Override
             protected Void doInBackground(Void... arg0) {
+
                 // Creating service handler class instance
                 ServiceHandler sh = new ServiceHandler();
 
+                // Making a request to class_data_url and getting response
+                //String jsonStr2 = sh.makeServiceCall(class_data_url, ServiceHandler.GET);
+
+                try{
+                    JSONObject json_timetable = new JSONObject(loadJSONFromAsset("ClassData.json"));
+                    //JSONObject json_timetable = new JSONObject(jsonStr2);
+                    @SuppressWarnings("unchecked")
+                    Iterator<String> nameItr = json_timetable.keys();
+                    TimeTable = new HashMap<String, Lesson>();
+
+                    String code, comments, start_time, end_time, name, room, type, interval;
+                    int day, weeks;
+                    List<String> groups_list, teacher_list;
+
+                    while(nameItr.hasNext()){
+                        groups_list = new ArrayList<String>();
+                        teacher_list = new ArrayList<String>();
+
+                        String hash = nameItr.next();
+                        JSONObject lesson_json = json_timetable.getJSONObject(hash);
+
+                        code = lesson_json.getString("ainekood");
+                        comments = lesson_json.getString("comments");
+                        start_time = lesson_json.getString("start_time");
+                        end_time = lesson_json.getString("end_time");
+                        name = lesson_json.getString("name");
+                        room = lesson_json.getString("room");
+                        type = lesson_json.getString("type");
+                        interval = lesson_json.getString("lasts");
+
+                        day = lesson_json.getInt("day");
+                        weeks = lesson_json.getInt("weeks");
+
+                        JSONArray jsonArray = lesson_json.getJSONArray("groups");
+                        if (jsonArray != null) {
+                            int len = jsonArray.length();
+                            for (int i=0;i<len;i++){
+                                groups_list.add(jsonArray.get(i).toString());
+                            }
+                        }
+                        jsonArray = lesson_json.getJSONArray("teacher");
+                        if (jsonArray != null) {
+                            int len = jsonArray.length();
+                            for (int i=0;i<len;i++){
+                                teacher_list.add(jsonArray.get(i).toString());
+                            }
+                        }
+
+                        Lesson tempLesson = new Lesson(code, comments, day, weeks, start_time,
+                                end_time, name, room, groups_list, teacher_list, type, interval);
+
+                        TimeTable.put(hash, tempLesson);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                ///////////
+
                 // Making a request to groups_map_url and getting response
                 String jsonStr = sh.makeServiceCall(groups_map_url, ServiceHandler.GET);
-
-               // Log.d("Response: ", "> " + jsonStr);
 
                 if (jsonStr != null) {
                     try {
@@ -176,13 +255,11 @@ public class Timetable extends FragmentActivity {
 
                 }
 
-
-
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
 
-    //stuff that updates ui
+                //stuff that updates ui
 
                         spinnerFaculties = (Spinner) findViewById(R.id.faculty_spinner);
                         spinnerPrograms = (Spinner) findViewById(R.id.groups_spinner);
@@ -202,66 +279,41 @@ public class Timetable extends FragmentActivity {
 
                         spinnerFaculties.setOnItemSelectedListener(new OnItemSelectedListener() {
                             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                //UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
                                 UpdateSpinners(1);
-
-                                //TODO
-                              //  programAdapt.clear();
-                               // programAdapt.addAll(spinners_members.get(spinnerFaculties.getSelectedItem()).keySet());
-                              //  List<String> programs = spinners_members.get(spinnerFaculties.getSelectedItem()).keySet();
                             }
-                            //TODO auto select for every spinner
                             public void onNothingSelected(AdapterView<?> parent) {
                             }
                         });
                         spinnerPrograms.setOnItemSelectedListener(new OnItemSelectedListener() {
                             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                // UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
                                 UpdateSpinners(2);
                             }
 
                             public void onNothingSelected(AdapterView<?> parent) {
-                               // UpdateSpinners();
                             }
                         });
                         spinnerGroupsIDs.setOnItemSelectedListener(new OnItemSelectedListener() {
                             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                // UpdateNumbersSpinner(numbersAdapt, Raspisanie, selectedGroupName);
-                               // UpdateSpinners(3);
+                                UpdateHashTable();
                             }
                             public void onNothingSelected(AdapterView<?> parent) {
                             }
                         });
 
-
                         List<String> faculties = new ArrayList<String>();
-                        List<String> groups = new ArrayList<String>();
 
-                        //TODO ADD GROUPS, FACULTIES, IDs
-                        for (Map.Entry<String, HashMap<String, List<String>>> faculty: spinners_members.entrySet()) {
-                           // facultyAdapt.add(faculty.getKey());
-                            faculties.add(faculty.getKey());
-                            //for (Map.Entry<String, List<String>> program: faculty.getValue().entrySet()) {
-                                //programAdapt.add(program.getKey());
-                              //  groups.add(program.getKey());
-                            //}
+                        for (String faculty: spinners_members.keySet()) {
+                            faculties.add(faculty);
                         }
 
-
                         Collections.sort(faculties);
-                        //Collections.sort(groups);
 
                         for(String facul : faculties){
                             facultyAdapt.add(facul);
                         }
-                       // for(String group : groups){
-                         //   programAdapt.add(group);
-                       // }
-
                     }
 
                 });
-
 
                 return null;
             }
@@ -282,13 +334,6 @@ public class Timetable extends FragmentActivity {
 
         }
 
-
-
-    //////////////////////////
-
-
-    //////////////////////////
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
@@ -302,20 +347,6 @@ public class Timetable extends FragmentActivity {
                 int page = 4;
                 mPager.setCurrentItem(page);
                 return true;
-            /*
-            case R.id.add_page:
-                if (mAdapter.getCount() < 10) {
-                    mAdapter.setCount(mAdapter.getCount() + 1);
-                    mIndicator.notifyDataSetChanged();
-                }
-                return true;
-
-            case R.id.remove_page:
-                if (mAdapter.getCount() > 1) {
-                    mAdapter.setCount(mAdapter.getCount() - 1);
-                    mIndicator.notifyDataSetChanged();
-                }
-                return true;*/
         }
         return super.onOptionsItemSelected(item);
     }
@@ -384,14 +415,53 @@ public class Timetable extends FragmentActivity {
                 group_idAdapt.add(group);
             }
         }
+        UpdateHashTable();
 
+    }
+
+    public void UpdateHashTable(){
+
+        String chosenProgram = (String) spinnerPrograms.getSelectedItem();
         String chosenGroup = (String) spinnerGroupsIDs.getSelectedItem();
+        String chosenFaculty = (String) spinnerFaculties.getSelectedItem();
 
-        if (chosenGroup != null) {
-            total_group = chosenFaculty + chosenProgram + chosenGroup;
-            Log.d("Group > ", total_group);
+        if(chosenGroup != null && chosenProgram != null) {
+            String total_group = chosenFaculty + chosenProgram + chosenGroup;
+            if(!total_group.equals(selectedGroup)){
+                selectedGroup = total_group;
+                ClassHashes = new ArrayList<String>(groups_map.get(total_group));
+                UpdateList();
+            }
+        }
+    }
+
+    public void UpdateList(){
+        lessons = new ArrayList<Lesson>();
+        if(ClassHashes != null) {
+            for (String hash : ClassHashes) {
+                lessons.add(TimeTable.get(hash));
+            }
         }
 
     }
+
+    public String loadJSONFromAsset(String filename) {
+        String json = null;
+        try {
+            InputStream is = getAssets().open(filename);
+
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+    }
+
 }
 
