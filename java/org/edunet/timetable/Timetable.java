@@ -6,9 +6,15 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
+import android.text.style.UpdateAppearance;
+import android.text.style.UpdateLayout;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +30,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -57,8 +65,11 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     ArrayAdapter<String> facultyAdapt;
 
     String selectedGroup = "";
+    String saved_group = "";
 
     Typeface tf;
+    SharedPreferences sPref;
+    ImageButton Lock;
     //////////////////////////
 
     private ProgressDialog pDialog;
@@ -75,6 +86,8 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     List<String> groups = new ArrayList<String>();
 
     List<Lesson> lessons = new ArrayList<Lesson>();
+
+    TextView your_group;
     //////////////////////////
 
 
@@ -92,8 +105,18 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         mIndicator = (CirclePageIndicator) findViewById(R.id.indicator);
         mIndicator.setViewPager(mPager);
 
+        Lock = (ImageButton) findViewById(R.id.lock);
+        your_group = (TextView) findViewById(R.id.your_group);
+
         // Starting program execution
         //////////////////////////////////
+
+        Lock.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                save_group();
+            }
+        });
+
         new GetGroupsMap().execute();
 
         mPager.setCurrentItem(HelperFunctions.getTodayPageNumber());
@@ -115,7 +138,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         });
 
     }
-
     /**
          * Async task class to get json by making HTTP call
          * */
@@ -259,45 +281,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
                     public void run() {
 
                 //stuff that updates ui
-
-                        spinnerFaculties = (Spinner) findViewById(R.id.faculty_spinner);
-                        spinnerPrograms = (Spinner) findViewById(R.id.groups_spinner);
-                        spinnerGroupsIDs = (Spinner) findViewById(R.id.groupsID_spinner);
-
-                        group_idAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
-                        programAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
-                        facultyAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
-
-                        group_idAdapt.setDropDownViewResource(R.layout.customer_spinner);
-                        programAdapt.setDropDownViewResource(R.layout.customer_spinner);
-                        facultyAdapt.setDropDownViewResource(R.layout.customer_spinner);
-
-                        spinnerPrograms.setAdapter(programAdapt);
-                        spinnerGroupsIDs.setAdapter(group_idAdapt);
-                        spinnerFaculties.setAdapter(facultyAdapt);
-
-                        spinnerFaculties.setOnItemSelectedListener(new OnItemSelectedListener() {
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                UpdateSpinners(1);
-                            }
-                            public void onNothingSelected(AdapterView<?> parent) {
-                            }
-                        });
-                        spinnerPrograms.setOnItemSelectedListener(new OnItemSelectedListener() {
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                UpdateSpinners(2);
-                            }
-
-                            public void onNothingSelected(AdapterView<?> parent) {
-                            }
-                        });
-                        spinnerGroupsIDs.setOnItemSelectedListener(new OnItemSelectedListener() {
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                UpdateHashTable();
-                            }
-                            public void onNothingSelected(AdapterView<?> parent) {
-                            }
-                        });
+                        init_spinners();
 
                         List<String> faculties = new ArrayList<String>();
 
@@ -313,22 +297,23 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
                     }
 
                 });
-
                 return null;
             }
 
             @Override
             protected void onPostExecute(Void result) {
                 super.onPostExecute(result);
-
                 /**
                  * Updating parsed JSON data into spinners
                  * */
 
                 // Dismiss the progress dialog
-                if (pDialog.isShowing())
+                if (pDialog.isShowing()) {
                     pDialog.dismiss();
+                    load_group();
+                    your_group.setText(selectedGroup);
 
+                }
             }
 
         }
@@ -366,7 +351,10 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
     public void populatePrograms(String chosenFaculty){
 
-        spinnerPrograms.setSelection(0);
+
+        if(spinnerPrograms.getSelectedItemPosition() > spinnerPrograms.getCount()){
+            spinnerPrograms.setSelection(0);
+        }
         programAdapt.clear();
 
         ArrayList<String> programList = new ArrayList<String>();
@@ -378,6 +366,9 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             programAdapt.add(program);
         }
 
+        if(spinnerPrograms.getSelectedItemPosition() > spinnerPrograms.getCount()){
+            spinnerPrograms.setSelection(0);
+        }
         String chosenProgram = (String) spinnerPrograms.getSelectedItem();
 
         if (chosenProgram != null) {
@@ -386,10 +377,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     }
 
     public void populateGroups(String chosenFaculty, String chosenProgram) {
-
-        String last_group = (String) spinnerGroupsIDs.getSelectedItem();
-
-        spinnerGroupsIDs.setSelection(0);
         group_idAdapt.clear();
 
         List<String> groupList = new ArrayList<String>();
@@ -399,23 +386,52 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
         Collections.sort(groupList);
 
-        if (last_group != null) {
-            last_group = last_group.substring(0, 1);
-            for (int i = 0; i < groupList.size(); i++) {
-                String group = groupList.get(i);
-                group_idAdapt.add(group);
-                if(group.substring(0, 1).equals(last_group)){
-                    spinnerGroupsIDs.setSelection(i);
-                    last_group = null;
+        if(saved_group.length() > 1){
+
+            sPref = getPreferences(MODE_PRIVATE);
+            saved_group = sPref.getString("saved_group", "");
+
+            String my_program = saved_group.substring(1,4);
+
+            if(!chosenProgram.equals(my_program)){
+                String course = saved_group.substring(4, 5);
+                for (int i = 0; i < groupList.size(); i++) {
+                    String group = groupList.get(i);
+                    group_idAdapt.add(group);
+                    if(group.substring(0, 1).equals(course)){
+                        if(course.length() < 3) {
+                            spinnerGroupsIDs.setSelection(i);
+                            course = "done";
+                        }
+                    }
                 }
             }
-        } else {
+            else {
+                String course = saved_group.substring(4, 6);
+                for (int i = 0; i < groupList.size(); i++) {
+                    String group = groupList.get(i);
+                    group_idAdapt.add(group);
+                    if(group.substring(0, 2).equals(course)){
+                        if(course.length() < 3) {
+                            spinnerGroupsIDs.setSelection(i);
+                            course = "done";
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            Log.d("Set group selection to ", "fds" );
             for (String group : groupList) {
                 group_idAdapt.add(group);
             }
         }
-        UpdateHashTable();
 
+        if(spinnerGroupsIDs.getSelectedItemPosition() >= spinnerGroupsIDs.getCount()){
+            spinnerGroupsIDs.setSelection(0);
+        }
+
+        UpdateHashTable();
     }
 
     public void UpdateHashTable(){
@@ -430,6 +446,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
                 selectedGroup = total_group;
                 ClassHashes = new ArrayList<String>(groups_map.get(total_group));
                 UpdateList();
+                updateLockView();
             }
         }
     }
@@ -445,6 +462,49 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
                mAdapter.notifyDataSetChanged();
                // fragmentCommunicator.passDataToFragment("Hell yeah, update dem pages");
             }
+        }
+    }
+
+    public void save_group(){
+        sPref = getPreferences(MODE_PRIVATE);
+        Editor ed = sPref.edit();
+        ed.putString("saved_group", selectedGroup);
+        ed.apply();
+
+        your_group.setText(selectedGroup);
+
+        updateLockView();
+    }
+
+    public void load_group(){
+        sPref = getPreferences(MODE_PRIVATE);
+        saved_group = sPref.getString("saved_group", "");
+        if(saved_group.length() > 1){
+            Log.d("Loading ", saved_group);
+            int fac_pos = facultyAdapt.getPosition(saved_group.substring(0, 1));
+            spinnerFaculties.setSelection(fac_pos);
+
+            UpdateSpinners(1);
+
+            int prog_pos = programAdapt.getPosition(saved_group.substring(1,4));
+            spinnerPrograms.setSelection(prog_pos);
+
+            UpdateSpinners(2);
+
+            int gr_pos = group_idAdapt.getPosition(saved_group.substring(4,6));
+            spinnerGroupsIDs.setSelection(gr_pos);
+        }
+    }
+
+    public void updateLockView() {
+
+
+
+        sPref = getPreferences(MODE_PRIVATE);
+        if (sPref.getString("saved_group", "").equals(selectedGroup)) {
+            Lock.setImageResource(R.drawable.lockclosed);
+        } else {
+            Lock.setImageResource(R.drawable.lockopened);
         }
     }
 
@@ -464,6 +524,48 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             return null;
         }
         return json;
+    }
+
+    private void init_spinners() {
+
+        spinnerFaculties = (Spinner) findViewById(R.id.faculty_spinner);
+        spinnerPrograms = (Spinner) findViewById(R.id.groups_spinner);
+        spinnerGroupsIDs = (Spinner) findViewById(R.id.groupsID_spinner);
+
+        group_idAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
+        programAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
+        facultyAdapt = new ArrayAdapter<String>(Timetable.this, R.layout.custom_spinner_list);
+
+        group_idAdapt.setDropDownViewResource(R.layout.customer_spinner);
+        programAdapt.setDropDownViewResource(R.layout.customer_spinner);
+        facultyAdapt.setDropDownViewResource(R.layout.customer_spinner);
+
+        spinnerPrograms.setAdapter(programAdapt);
+        spinnerGroupsIDs.setAdapter(group_idAdapt);
+        spinnerFaculties.setAdapter(facultyAdapt);
+
+        spinnerFaculties.setOnItemSelectedListener(new OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                UpdateSpinners(1);
+            }
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        spinnerPrograms.setOnItemSelectedListener(new OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                UpdateSpinners(2);
+            }
+
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        spinnerGroupsIDs.setOnItemSelectedListener(new OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                UpdateHashTable();
+            }
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
     }
 
 }
