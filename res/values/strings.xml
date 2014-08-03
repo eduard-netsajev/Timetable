@@ -118,9 +118,7 @@
     <string name="guide11">In the opened menu you can delete, add, edit or comment all the classes</string>
     <string name="guide12">Finally, go and check out the Preferences menu, it directly affects your schedule\'s appereance and makes your life easier!</string>
     <string name="guide13">Click on the Preferences icon in order to go to the menu</string>
-
-
-
+    <string name="too_much_rooms">3+ rooms</string>
 
 
     <string-array name="languages">

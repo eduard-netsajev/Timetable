@@ -41,7 +41,7 @@ class ClassListArrayAdapter extends ArrayAdapter<Lesson> {
 
         //set other 3 fields
         classView.setStartTime(currentListItem.getStart_time());
-        classView.setClassRoom(currentListItem.getRoom());
+        classView.setClassRoom(currentListItem.getRoom(mContext));
         classView.setClassType(currentListItem.getType());
 
 

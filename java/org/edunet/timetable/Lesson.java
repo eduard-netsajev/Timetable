@@ -1,5 +1,9 @@
 package org.edunet.timetable;
 
+import android.content.Context;
+import android.util.Log;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -100,8 +104,24 @@ class Lesson {
         this.name = name;
     }
 
-    public String getRoom() {
-        return room;
+    public String getRoom(Context context) {
+        String temp_room = room;
+        List<String> rooms= new ArrayList<String>();
+        while(temp_room.contains(",")){
+            int index = temp_room.indexOf(",");
+            String new_string = temp_room.substring(0, index);
+            rooms.add(new_string);
+            temp_room = temp_room.substring(index+2);
+        }
+        rooms.add(temp_room);
+        if(rooms.size() > 3){
+            return(context.getString(R.string.too_much_rooms));
+        //    return("3+ rooms");
+        }
+        else{
+            return room;
+        }
+
     }
 
     public void setRoom(String room) {
