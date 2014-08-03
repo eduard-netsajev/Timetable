@@ -11,11 +11,11 @@
 
 
     <TableRow
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="5dp"
+        android:id="@+id/top_row"
         android:paddingLeft="5dp">
-
 
         <TextView
             android:layout_width="wrap_content"
@@ -26,16 +26,20 @@
             android:textColor="#6e0234"
             android:textSize="28sp" />
 
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
+            android:paddingLeft="15dp"
             android:text=""
             android:textSize="28sp"
             android:layout_margin="5dp"
             android:textColor="#6e0234"
             android:id="@+id/your_group" />
-    </TableRow>
+
+        </TableRow>
+
 
     <TableRow
         android:layout_width="fill_parent"
@@ -43,52 +47,64 @@
         android:layout_marginLeft="5dp"
         android:paddingLeft="5dp">
 
-        <Spinner
-            android:layout_width="0dp"
-            android:layout_weight="0.25"
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:paddingLeft="5dp">
+
+        <ImageButton
+            android:id="@+id/lock"
+            android:layout_width="55dp"
             android:layout_height="wrap_content"
-            android:id="@+id/faculty_spinner"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/lockopened"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="true"
+            android:layout_gravity="left|bottom"
+            android:paddingTop="15dp"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
+            android:includeFontPadding="false"
+            android:background="@drawable/clear_button_background"
+            />
+
+        <Spinner
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/groupsID_spinner"
             android:spinnerMode="dropdown"
             android:entries="@array/groupsID_array"
+            android:layout_toLeftOf="@id/lock"
             android:clickable="true"
             android:focusable="false"
             android:background="@drawable/spinner_default_edunet" />
 
         <Spinner
-
-            android:layout_width="0dp"
-            android:layout_weight="0.45"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/groups_spinner"
             android:spinnerMode="dropdown"
             android:entries="@array/groups_array"
             android:clickable="true"
+            android:layout_toLeftOf="@id/groupsID_spinner"
             android:focusable="false"
             android:background="@drawable/spinner_default_edunet" />
+
         <Spinner
-            android:layout_width="0dp"
-            android:layout_weight="0.3"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/groupsID_spinner"
+            android:id="@+id/faculty_spinner"
             android:spinnerMode="dropdown"
+            android:layout_gravity="right"
             android:entries="@array/groupsID_array"
+            android:layout_toLeftOf="@id/groups_spinner"
             android:clickable="true"
             android:focusable="false"
             android:background="@drawable/spinner_default_edunet" />
 
-        <ImageButton
-            android:id="@+id/lock"
-            android:layout_width="35dp"
-            android:layout_height="wrap_content"
-            android:src="@drawable/lockopened"
-            android:scaleType="centerCrop"
-            android:adjustViewBounds="true"
-            android:layout_gravity="left|bottom"
-            android:paddingRight="10dp"
-            android:includeFontPadding="false"
-            android:background="@drawable/clear_button_background"
-            />
 
+    </RelativeLayout>
     </TableRow>
 
     <TextView
@@ -98,7 +114,7 @@
         android:id="@+id/today"
         android:layout_gravity="center"
         android:textColor="#6e0234"
-        android:textSize="28sp" />
+        android:textSize="20sp" />
 
     <android.support.v4.view.ViewPager
         android:id="@+id/pager"

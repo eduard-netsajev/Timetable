@@ -16,13 +16,13 @@
     <string name="exit">Exit</string>
 
     <string-array name="groups_array">
-        <item>RDKR11</item>
-        <item>RDIR11</item>
+        <item>DKR</item>
+        <item>DIR</item>
     </string-array>
 
     <string-array name="groupsID_array">
         <item>11</item>
-        <item>31</item>
+        <item>33</item>
     </string-array>
 
     <string name="Monday">Monday</string>

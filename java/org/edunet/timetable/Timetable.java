@@ -32,13 +32,13 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import org.edunet.timetable.Lesson;
 
 public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
@@ -47,7 +47,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         if(someValue.substring(0,5).equals("TEXT:")){
             today.setText(someValue.substring(5));
         }
-
         Log.d("passDataToActivity -> ", someValue);
     }
 
@@ -93,6 +92,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     List<Lesson> lessons = new ArrayList<Lesson>();
 
     TextView your_group;
+    TableRow top_row;
     //////////////////////////
 
 
@@ -112,7 +112,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
         Lock = (ImageButton) findViewById(R.id.lock);
         your_group = (TextView) findViewById(R.id.your_group);
-
+        top_row = (TableRow) findViewById(R.id.top_row);
         // Starting program execution
         //////////////////////////////////
 
@@ -139,6 +139,12 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
             @Override
             public void onPageScrollStateChanged(int state) {
+            }
+        });
+
+        top_row.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                load_group();
             }
         });
 
@@ -498,6 +504,9 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
             int gr_pos = group_idAdapt.getPosition(saved_group.substring(4,6));
             spinnerGroupsIDs.setSelection(gr_pos);
+        }
+        else{
+            Toast.makeText(getApplicationContext(), getString(R.string.No_group), Toast.LENGTH_SHORT).show();
         }
     }
 

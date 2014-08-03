@@ -33,7 +33,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -189,9 +188,9 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
             ((Timetable) context).fragmentCommunicator = this;
             if (lessons_today.size() == 0) {
                 // TextView today = (TextView) findViewById(R.id.today);
-                activityCommunicator.passDataToActivity("TEXT:You have no lessons today");
+                activityCommunicator.passDataToActivity("TEXT:No lessons");
             } else {
-                activityCommunicator.passDataToActivity("TEXT:" + lessons_today.size() + " lessons today");
+                activityCommunicator.passDataToActivity("TEXT:" + lessons_today.size() + " lessons");
             }
         }
     }
