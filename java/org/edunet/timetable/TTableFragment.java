@@ -155,6 +155,8 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
              //setListAdapter(adapter);
             ListAdapter = new ClassListArrayAdapter(context, R.layout.list_item, R.id.email, lessons_today);
 
+            send_lesson_count();
+
             setListAdapter(ListAdapter);
 
             ListView lv = getListView();
@@ -169,7 +171,6 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
 
                 }
             });
-
         }
 
     }
@@ -178,7 +179,20 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
-            ((Timetable)context).fragmentCommunicator = this;
+            send_lesson_count();
+        }
+    }
+
+    public void send_lesson_count(){
+
+        if(this.getUserVisibleHint()) {
+            ((Timetable) context).fragmentCommunicator = this;
+            if (lessons_today.size() == 0) {
+                // TextView today = (TextView) findViewById(R.id.today);
+                activityCommunicator.passDataToActivity("TEXT:You have no lessons today");
+            } else {
+                activityCommunicator.passDataToActivity("TEXT:" + lessons_today.size() + " lessons today");
+            }
         }
     }
 
@@ -208,6 +222,7 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
     @Override
     public void passDataToFragment(String someValue){
         activityAssignedValue = someValue;
+        send_lesson_count();
     }
 
 
@@ -225,93 +240,5 @@ public final class TTableFragment extends ListFragment implements FragmentCommun
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(STRING_VALUE,activityAssignedValue);
-    }
-}
-
-
-
-
-class ClassListArrayAdapter extends ArrayAdapter<Lesson> {
-
-    private Context mContext;
-
-    private int selectedItem = -1;
-
-    public void setSelection(int position) {
-        selectedItem = position;
-    }
-
-    public ClassListArrayAdapter(Context context, int resource, int textViewResourceId, List<Lesson> objects) {
-        super(context, resource, textViewResourceId, objects);
-        mContext = context;
-
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ClassView classView;
-
-        //Take the item at position
-        Lesson currentListItem = getItem(position);
-
-        if (convertView == null) {
-            classView = new ClassView(mContext);
-        } else {
-            classView = (ClassView) convertView;
-        }
-
-        //Set ClassName field text to currentListItem.ClassName
-        classView.setClassName(currentListItem.getName());
-
-        //set other 3 fields
-        classView.setStartTime(currentListItem.getStart_time());
-        classView.setClassRoom(currentListItem.getRoom());
-        classView.setClassType(currentListItem.getType());
-
-
-        return classView;
-
-    }
-
-}
-
-class ClassView extends LinearLayout {
-
-    private TextView StartTime;
-    private TextView ClassName;
-    private TextView ClassRoom;
-    private TextView ClassType;
-
-
-    public ClassView(Context context) {
-        super(context);
-
-        LayoutInflater.from(context).inflate(R.layout.list_item, this);
-
-        this.StartTime = (TextView) findViewById(R.id.name);
-        this.ClassName = (TextView) findViewById(R.id.email);
-        this.ClassRoom = (TextView) findViewById(R.id.textViewClassRoom);
-        this.ClassType = (TextView) findViewById(R.id.mobile);
-
-        Typeface tf =((Timetable)context).tf;
-        if(tf != null) {
-            this.ClassName.setTypeface(tf);
-        }
-    }
-
-    public void setClassName(String Name) {
-        this.ClassName.setText(Name);
-    }
-
-    public void setStartTime(String Number) {
-        this.StartTime.setText(Number);
-    }
-
-    public void setClassRoom(String Room) {
-        this.ClassRoom.setText(Room);
-    }
-
-    public void setClassType(String Groups) {
-        this.ClassType.setText(Groups);
     }
 }

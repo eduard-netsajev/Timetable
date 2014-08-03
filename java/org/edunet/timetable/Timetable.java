@@ -43,7 +43,12 @@ import org.edunet.timetable.Lesson;
 public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
     public void passDataToActivity(String someValue){
-        Log.d("passDataToActovity -> ", someValue);
+        TextView today = (TextView) findViewById(R.id.today);
+        if(someValue.substring(0,5).equals("TEXT:")){
+            today.setText(someValue.substring(5));
+        }
+
+        Log.d("passDataToActivity -> ", someValue);
     }
 
     ///////////////
@@ -460,7 +465,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             //TODO refresh pages
             if(fragmentCommunicator != null) {
                mAdapter.notifyDataSetChanged();
-               // fragmentCommunicator.passDataToFragment("Hell yeah, update dem pages");
+               fragmentCommunicator.passDataToFragment("Hell yeah, update dem pages");
             }
         }
     }
