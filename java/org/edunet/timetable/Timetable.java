@@ -1,23 +1,28 @@
 package org.edunet.timetable;
 
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Typeface;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.text.style.UpdateAppearance;
-import android.text.style.UpdateLayout;
 import android.util.Log;
-import android.view.Gravity;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,6 +36,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -53,7 +59,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     ///////////////
     //interface through which communication is made to fragment
     public FragmentCommunicator fragmentCommunicator;
-   // private CustomAdapter customAdapter;
+    // private CustomAdapter customAdapter;
     public static ArrayList<Fragment> listFragments;
     //////////////
     TTableFragmentAdapter mAdapter;
@@ -81,6 +87,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     // URL to get GroupsMap JSON
     private final static String groups_map_url = "http://money.vnet.ee/GroupsMap.json";
     private final static String class_data_url = "http://money.vnet.ee/ClassData.json";
+    private final static String TT_version_url = "http://money.vnet.ee/version.json";
 
     HashMap<String, HashMap<String, List<String>>> spinners_members = new HashMap<String, HashMap<String, List<String>>>();
     Map<String, List<String>> groups_map = null;
@@ -150,184 +157,86 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
     }
     /**
-         * Async task class to get json by making HTTP call
-         * */
-        public class GetGroupsMap extends AsyncTask<Void, Void, Void> {
+     * Async task class to get json by making HTTP call
+     * */
+    public class GetGroupsMap extends AsyncTask<Void, Void, Void> {
 
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-                // Showing progress dialog
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
 
-                pDialog = new ProgressDialog(Timetable.this);
-                pDialog.setMessage("Please wait...");
-                pDialog.setCancelable(false);
-                pDialog.show();
-
-            }
-
-            @Override
-            protected Void doInBackground(Void... arg0) {
-
-                // Creating service handler class instance
-                ServiceHandler sh = new ServiceHandler();
-
-                // Making a request to class_data_url and getting response
-                //String jsonStr2 = sh.makeServiceCall(class_data_url, ServiceHandler.GET);
-
-                try{
-                    JSONObject json_timetable = new JSONObject(loadJSONFromAsset("ClassData.json"));
-                    //JSONObject json_timetable = new JSONObject(jsonStr2);
-                    @SuppressWarnings("unchecked")
-                    Iterator<String> nameItr = json_timetable.keys();
-                    TimeTable = new HashMap<String, Lesson>();
-
-                    String code, comments, start_time, end_time, name, room, type, interval;
-                    int day, weeks;
-                    List<String> groups_list, teacher_list;
-
-                    while(nameItr.hasNext()){
-                        groups_list = new ArrayList<String>();
-                        teacher_list = new ArrayList<String>();
-
-                        String hash = nameItr.next();
-                        JSONObject lesson_json = json_timetable.getJSONObject(hash);
-
-                        code = lesson_json.getString("ainekood");
-                        comments = lesson_json.getString("comments");
-                        start_time = lesson_json.getString("start_time");
-                        end_time = lesson_json.getString("end_time");
-                        name = lesson_json.getString("name");
-                        room = lesson_json.getString("room");
-                        type = lesson_json.getString("type");
-                        interval = lesson_json.getString("lasts");
-
-                        day = lesson_json.getInt("day");
-                        weeks = lesson_json.getInt("weeks");
-
-                        JSONArray jsonArray = lesson_json.getJSONArray("groups");
-                        if (jsonArray != null) {
-                            int len = jsonArray.length();
-                            for (int i=0;i<len;i++){
-                                groups_list.add(jsonArray.get(i).toString());
-                            }
-                        }
-                        jsonArray = lesson_json.getJSONArray("teacher");
-                        if (jsonArray != null) {
-                            int len = jsonArray.length();
-                            for (int i=0;i<len;i++){
-                                teacher_list.add(jsonArray.get(i).toString());
-                            }
-                        }
-
-                        Lesson tempLesson = new Lesson(code, comments, day, weeks, start_time,
-                                end_time, name, room, groups_list, teacher_list, type, interval);
-
-                        TimeTable.put(hash, tempLesson);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-                ///////////
-
-                // Making a request to groups_map_url and getting response
-                String jsonStr = sh.makeServiceCall(groups_map_url, ServiceHandler.GET);
-
-                if (jsonStr != null) {
-                    try {
-                        //Converting hashmap GroupsMap.json into Java object
-                        JSONObject GroupsMap = new JSONObject(jsonStr);
-                        @SuppressWarnings("unchecked")
-                        Iterator<String> nameItr = GroupsMap.keys();
-                        groups_map = new HashMap<String, List<String>>();
-                        while(nameItr.hasNext()) {
-                            String group = nameItr.next();
-                            groups.add(group);
-
-                            List<String> hashed_classes = new ArrayList<String>();
-                            JSONArray jsonArray = GroupsMap.getJSONArray(group);
-
-                            for (int i=0; i<jsonArray.length(); i++) {
-                                hashed_classes.add(jsonArray.getString(i));
-                            }
-                            groups_map.put(group, hashed_classes);
-
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Log.e("ServiceHandler", "Couldn't get any data from the groups_map_url");
-                }
-
-                //chunk groups into hashmap of faculties, programs and groups in 1 iteration
-                for (String group : groups){
-                    String faculty_name = group.substring(0, 1);
-                    String group_name = group.substring(1, 4);
-                    String group_id = group.substring(4);
-
-                    if (spinners_members.get(faculty_name) != null) {
-                        if (spinners_members.get(faculty_name).get(group_name) != null) {
-                            spinners_members.get(faculty_name).get(group_name).add(group_id);
-                        }else {
-                            // No such group key
-                            List<String> tempList = new ArrayList<String>();
-                            tempList.add(group_id);
-                            spinners_members.get(faculty_name).put(group_name, tempList);
-                        }
-                    }else {
-                        // No such faculty key, meaning no such group key as well
-                        List<String> tempList = new ArrayList<String>();
-                        tempList.add(group_id);
-                        HashMap<String, List<String>> tempMap = new HashMap<String, List<String>>();
-                        tempMap.put(group_name, tempList);
-                        spinners_members.put(faculty_name, tempMap);
-                    }
-
-                }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                //stuff that updates ui
-                        init_spinners();
-
-                        List<String> faculties = new ArrayList<String>();
-
-                        for (String faculty: spinners_members.keySet()) {
-                            faculties.add(faculty);
-                        }
-
-                        Collections.sort(faculties);
-
-                        for(String facul : faculties){
-                            facultyAdapt.add(facul);
-                        }
-                    }
-
-                });
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void result) {
-                super.onPostExecute(result);
-                /**
-                 * Updating parsed JSON data into spinners
-                 * */
-
-                // Dismiss the progress dialog
-                if (pDialog.isShowing()) {
-                    pDialog.dismiss();
-                    load_group();
-                    your_group.setText(selectedGroup);
-
-                }
-            }
+            pDialog = new ProgressDialog(Timetable.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
 
         }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+
+            //TODO FIRSTRUN
+            sPref = getPreferences(MODE_PRIVATE);
+            if (sPref.getBoolean("firstrun", true)) {
+            copy_assets_to_internal();
+            } else {
+
+            }
+
+            boolean up_to_date = check_version();
+            if(up_to_date){
+                TimeTable = load_timetable();
+                load_groups();
+            }
+
+
+
+
+
+            ///////////
+
+            // Making a request to groups_map_url and getting response
+            //   String jsonStr = sh.makeServiceCall(groups_map_url, ServiceHandler.GET);
+
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    //stuff that updates ui
+                    init_spinners();
+
+                }
+
+            });
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            /**
+             * Updating parsed JSON data into spinners
+             * */
+
+            // Dismiss the progress dialog
+            if (pDialog.isShowing()) {
+                pDialog.dismiss();
+                load_group();
+                your_group.setText(selectedGroup);
+
+                sPref = getPreferences(MODE_PRIVATE);
+                if (sPref.getBoolean("firstrun", true)) {
+                    ProgramGuide();
+                    Editor ed = sPref.edit();
+                    ed.putBoolean("firstrun", false).apply();
+                }
+
+            }
+        }
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -468,10 +377,9 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             for (String hash : ClassHashes) {
                 lessons.add(TimeTable.get(hash));
             }
-            //TODO refresh pages
             if(fragmentCommunicator != null) {
-               mAdapter.notifyDataSetChanged();
-               fragmentCommunicator.passDataToFragment("Hell yeah, update dem pages");
+                mAdapter.notifyDataSetChanged();
+                fragmentCommunicator.passDataToFragment("Hell yeah, update dem pages");
             }
         }
     }
@@ -511,9 +419,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     }
 
     public void updateLockView() {
-
-
-
         sPref = getPreferences(MODE_PRIVATE);
         if (sPref.getString("saved_group", "").equals(selectedGroup)) {
             Lock.setImageResource(R.drawable.lockclosed);
@@ -522,19 +427,21 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         }
     }
 
-    public String loadJSONFromAsset(String filename) {
+    public String loadJSONFromInternal(String filename) {
         String json = null;
         try {
-            InputStream is = getAssets().open(filename);
+            InputStream is = openFileInput(filename);
 
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
             is.close();
             json = new String(buffer, "UTF-8");
+            Log.d("State ", "OK");
 
         } catch (IOException ex) {
             ex.printStackTrace();
+            Log.d("State ", "NOT OK");
             return null;
         }
         return json;
@@ -580,7 +487,346 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+
+        List<String> faculties = new ArrayList<String>();
+
+        for (String faculty: spinners_members.keySet()) {
+            faculties.add(faculty);
+        }
+
+        Collections.sort(faculties);
+
+        for(String facul : faculties){
+            facultyAdapt.add(facul);
+        }
     }
 
+    static public void copy_asset(Context context, String file){
+        InputStream in = null;
+        OutputStream fout = null;
+        int count = 0;
+
+        try
+        {
+            in = context.getAssets().open(file);
+            fout = new FileOutputStream(new File(context.getFilesDir() + "/" + file));
+
+            byte data[] = new byte[1024];
+            while ((count = in.read(data, 0, 1024)) != -1)
+            {
+                fout.write(data, 0, count);
+            }
+            Log.d("State ", "1");
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+
+            Log.d("State ", "2");
+        }
+        finally
+        {
+            if (in != null)
+            {
+                try {
+                    in.close();
+
+                    Log.d("State ", "3");
+                } catch (IOException e)
+                {
+
+                    Log.d("State ", "4");
+                }
+            }
+            if (fout != null)
+            {
+                try {
+                    fout.close();
+
+                    Log.d("State ", "5");
+                } catch (IOException e) {
+
+                    Log.d("State ", "6");
+                }
+            }
+        }
+    }
+
+    private void ProgramGuide() {
+
+        final Dialog dialog = new Dialog(this, R.style.TTUthemeDialog);
+
+        dialog.setContentView(R.layout.guide_layout);
+        dialog.setTitle(R.string.guide);
+
+        // set the custom dialog components
+        TextView text = (TextView) dialog.findViewById(R.id.textViewTop);
+        text.setText(R.string.guide1);
+        ImageView image = (ImageView) dialog.findViewById(R.id.tutorial_imageLeft);
+        image.setImageResource(android.R.drawable.ic_menu_help);
+        image.setPadding(125, 40, 0, 40);
+        TextView textOR = (TextView) dialog.findViewById(R.id.dialogTextOR);
+        textOR.setVisibility(View.VISIBLE);
+        textOR.setText(R.string.help);
+        textOR.setPadding(0, 40, 0, 40);
+        textOR.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        TextView text2 = (TextView) dialog.findViewById(R.id.textViewBot);
+        text2.setText(R.string.guide2);
+
+        View dialogview = (View) dialog.findViewById(R.id.dialogView);
+
+        dialogview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            int HelperStage = 0;
+            TextView text = (TextView) dialog.findViewById(R.id.textViewTop);
+            ImageView image = (ImageView) dialog.findViewById(R.id.tutorial_imageLeft);
+            ImageView image2 = (ImageView) dialog.findViewById(R.id.tutorial_imageRight);
+            TextView textOR = (TextView) dialog.findViewById(R.id.dialogTextOR);
+            TextView text2 = (TextView) dialog.findViewById(R.id.textViewBot);
+
+            @Override
+            public void onDismiss(DialogInterface dialog1) {
+
+                switch (HelperStage) {
+
+                    case 0:
+                        dialog.setTitle(R.string.Days);
+                        text.setText(R.string.guide3);
+                        text2.setText(R.string.guide4);
+                        textOR.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+                        textOR.setText(R.string.or);
+                        image.setPadding(0, 0, 0, 0);
+                        textOR.setPadding(0, 0, 0, 0);
+                        image.setImageResource(R.drawable.swipeleft);
+                        image2.setImageResource(R.drawable.swiperight);
+                        dialog.show();
+                        HelperStage++;
+                        break;
+                    case 1:
+                        dialog.setTitle(R.string.Weeks);
+                        text.setText(R.string.guide5);
+                        text2.setText(R.string.guide6);
+                        image.setImageResource(R.drawable.swipeup);
+                        image2.setImageResource(R.drawable.swipedown);
+                        dialog.show();
+                        HelperStage++;
+                        break;
+                    case 2:
+                        dialog.setTitle(R.string.Lock);
+                        text.setText(R.string.guide7);
+                        text2.setText(R.string.guide8);
+                        image.setImageResource(R.anim.lock);
+                        image2.setVisibility(View.GONE);
+                        textOR.setVisibility(View.GONE);
+
+                        AnimationDrawable lockAnimation = (AnimationDrawable) image.getDrawable();
+                        lockAnimation.start();
+                        dialog.show();
+                        HelperStage++;
+                        break;
+                    case 3:
+                        dialog.setTitle(R.string.Cuztomization);
+                        text.setText(R.string.guide9);
+                        text2.setText(R.string.guide10);
+                        image.setImageResource(R.drawable.pressandhold);
+                        dialog.show();
+                        HelperStage++;
+                        break;
+                    case 4:
+                        dialog.setTitle(R.string.EditMenu);
+                        text.setText(R.string.guide11);
+                        text2.setVisibility(View.GONE);
+                        image.setImageResource(R.drawable.actionbar);
+                        dialog.show();
+                        HelperStage++;
+                        break;
+                    case 5:
+                        dialog.setTitle(R.string.preferences);
+                        text.setText(R.string.guide12);
+                        text2.setText(R.string.guide13);
+                        textOR.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+                        text2.setVisibility(View.VISIBLE);
+                        image.setImageResource(android.R.drawable.ic_menu_preferences);
+                        image.setPadding(125, 40, 0, 40);
+                        textOR.setVisibility(View.VISIBLE);
+                        textOR.setText(R.string.preferences);
+                        textOR.setPadding(0, 40, 0, 40);
+
+
+                        image.setOnClickListener(new View.OnClickListener() {
+                            // @Override
+                            public void onClick(View v) {
+                                dialog.dismiss();
+                                //   Intent pref = new Intent("edunet.virukol.tunniplaan.PREFS");
+                                //   startActivity(pref);
+                            }
+                        });
+                        textOR.setOnClickListener(new View.OnClickListener() {
+                            // @Override
+                            public void onClick(View v) {
+                                dialog.dismiss();
+                                //    Intent pref = new Intent("edunet.virukol.tunniplaan.PREFS");
+                                //  startActivity(pref);
+                            }
+                        });
+
+
+                        dialog.show();
+                        HelperStage++;
+
+                    default:
+
+                        break;
+                }
+
+
+            }
+        });
+
+    }
+
+    private HashMap<String, Lesson> load_timetable(){
+        HashMap<String, Lesson> temp_TimeTable = new HashMap<String, Lesson>();
+        try{
+            JSONObject json_timetable = new JSONObject(loadJSONFromInternal("ClassData.json"));
+            //JSONObject json_timetable = new JSONObject(jsonStr2);
+            @SuppressWarnings("unchecked")
+            Iterator<String> nameItr = json_timetable.keys();
+
+            String code, comments, start_time, end_time, name, room, type, interval;
+            int day, weeks;
+            List<String> groups_list, teacher_list;
+
+            while(nameItr.hasNext()){
+                groups_list = new ArrayList<String>();
+                teacher_list = new ArrayList<String>();
+
+                String hash = nameItr.next();
+                JSONObject lesson_json = json_timetable.getJSONObject(hash);
+
+                code = lesson_json.getString("ainekood");
+                comments = lesson_json.getString("comments");
+                start_time = lesson_json.getString("start_time");
+                end_time = lesson_json.getString("end_time");
+                name = lesson_json.getString("name");
+                room = lesson_json.getString("room");
+                type = lesson_json.getString("type");
+                interval = lesson_json.getString("lasts");
+
+                day = lesson_json.getInt("day");
+                weeks = lesson_json.getInt("weeks");
+
+                JSONArray jsonArray = lesson_json.getJSONArray("groups");
+                if (jsonArray != null) {
+                    int len = jsonArray.length();
+                    for (int i=0;i<len;i++){
+                        groups_list.add(jsonArray.get(i).toString());
+                    }
+                }
+                jsonArray = lesson_json.getJSONArray("teacher");
+                if (jsonArray != null) {
+                    int len = jsonArray.length();
+                    for (int i=0;i<len;i++){
+                        teacher_list.add(jsonArray.get(i).toString());
+                    }
+                }
+
+                Lesson tempLesson = new Lesson(code, comments, day, weeks, start_time,
+                        end_time, name, room, groups_list, teacher_list, type, interval);
+
+                temp_TimeTable.put(hash, tempLesson);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return temp_TimeTable;
+    }
+
+    private void load_groups(){
+        String jsonStr = loadJSONFromInternal("GroupsMap.json");
+        try {
+            //Converting hashmap GroupsMap.json into Java object
+            JSONObject GroupsMap = new JSONObject(jsonStr);
+            @SuppressWarnings("unchecked")
+            Iterator<String> nameItr = GroupsMap.keys();
+            groups_map = new HashMap<String, List<String>>();
+            while(nameItr.hasNext()) {
+                String group = nameItr.next();
+                groups.add(group);
+
+                List<String> hashed_classes = new ArrayList<String>();
+                JSONArray jsonArray = GroupsMap.getJSONArray(group);
+
+                for (int i=0; i<jsonArray.length(); i++) {
+                    hashed_classes.add(jsonArray.getString(i));
+                }
+                groups_map.put(group, hashed_classes);
+
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        //chunk groups into hashmap of faculties, programs and groups in 1 iteration
+        for (String group : groups){
+            String faculty_name = group.substring(0, 1);
+            String group_name = group.substring(1, 4);
+            String group_id = group.substring(4);
+
+            if (spinners_members.get(faculty_name) != null) {
+                if (spinners_members.get(faculty_name).get(group_name) != null) {
+                    spinners_members.get(faculty_name).get(group_name).add(group_id);
+                }else {
+                    // No such group key
+                    List<String> tempList = new ArrayList<String>();
+                    tempList.add(group_id);
+                    spinners_members.get(faculty_name).put(group_name, tempList);
+                }
+            }else {
+                // No such faculty key, meaning no such group key as well
+                List<String> tempList = new ArrayList<String>();
+                tempList.add(group_id);
+                HashMap<String, List<String>> tempMap = new HashMap<String, List<String>>();
+                tempMap.put(group_name, tempList);
+                spinners_members.put(faculty_name, tempMap);
+            }
+
+        }
+    }
+
+    private void copy_assets_to_internal(){
+        Context context = getApplicationContext();
+        copy_asset(context, "ClassData.json");
+        copy_asset(context, "GroupsMap.json");
+        copy_asset(context, "version.json");
+
+    }
+
+    private boolean check_version(){
+
+        // Creating service handler class instance
+        ServiceHandler sh = new ServiceHandler();
+
+        // Making a request to TT_version_url and getting response
+        String jsonStr = sh.makeServiceCall(TT_version_url, ServiceHandler.GET);
+        if(jsonStr != null){
+            try {
+                JSONObject version_json = new JSONObject(jsonStr);
+            } catch (JSONException e){
+                //do nothing
+            }
+
+        }
+
+        return true;
+    }
 }
 
