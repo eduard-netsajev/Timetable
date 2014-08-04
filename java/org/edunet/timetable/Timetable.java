@@ -53,7 +53,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         if(someValue.substring(0,5).equals("TEXT:")){
             today.setText(someValue.substring(5));
         }
-        Log.d("passDataToActivity -> ", someValue);
     }
 
     ///////////////
@@ -179,19 +178,11 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             //TODO FIRSTRUN
             sPref = getPreferences(MODE_PRIVATE);
             if (sPref.getBoolean("firstrun", true)) {
-            copy_assets_to_internal();
-            } else {
-
+                copy_assets_to_internal();
             }
-
-            boolean up_to_date = check_version();
-            if(up_to_date){
-                TimeTable = load_timetable();
-                load_groups();
-            }
-
-
-
+            final int update_need = check_version();
+            TimeTable = load_timetable();
+            load_groups();
 
 
             ///////////
@@ -203,6 +194,9 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    if(update_need == 2){
+                        pop_update_question();
+                    }
 
                     //stuff that updates ui
                     init_spinners();
@@ -308,8 +302,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
         if(saved_group.length() > 1){
 
-            sPref = getPreferences(MODE_PRIVATE);
-            saved_group = sPref.getString("saved_group", "");
+            saved_group = get_saved_group();
 
             String my_program = saved_group.substring(1,4);
 
@@ -341,7 +334,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             }
         }
         else {
-            Log.d("Set group selection to ", "fds" );
             for (String group : groupList) {
                 group_idAdapt.add(group);
             }
@@ -396,10 +388,8 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     }
 
     public void load_group(){
-        sPref = getPreferences(MODE_PRIVATE);
-        saved_group = sPref.getString("saved_group", "");
+        saved_group = get_saved_group();
         if(saved_group.length() > 1){
-            Log.d("Loading ", saved_group);
             int fac_pos = facultyAdapt.getPosition(saved_group.substring(0, 1));
             spinnerFaculties.setSelection(fac_pos);
 
@@ -419,12 +409,16 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     }
 
     public void updateLockView() {
-        sPref = getPreferences(MODE_PRIVATE);
-        if (sPref.getString("saved_group", "").equals(selectedGroup)) {
+        if (get_saved_group().equals(selectedGroup)) {
             Lock.setImageResource(R.drawable.lockclosed);
         } else {
             Lock.setImageResource(R.drawable.lockopened);
         }
+    }
+
+    private String get_saved_group(){
+        sPref = getPreferences(MODE_PRIVATE);
+        return sPref.getString("saved_group", "");
     }
 
     public String loadJSONFromInternal(String filename) {
@@ -437,11 +431,9 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             is.read(buffer);
             is.close();
             json = new String(buffer, "UTF-8");
-            Log.d("State ", "OK");
 
         } catch (IOException ex) {
             ex.printStackTrace();
-            Log.d("State ", "NOT OK");
             return null;
         }
         return json;
@@ -516,13 +508,10 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             {
                 fout.write(data, 0, count);
             }
-            Log.d("State ", "1");
         }
         catch (Exception e)
         {
             e.printStackTrace();
-
-            Log.d("State ", "2");
         }
         finally
         {
@@ -530,23 +519,17 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             {
                 try {
                     in.close();
-
-                    Log.d("State ", "3");
                 } catch (IOException e)
                 {
-
-                    Log.d("State ", "4");
+                 Log.d("Exception > ", "happened");
                 }
             }
             if (fout != null)
             {
                 try {
                     fout.close();
-
-                    Log.d("State ", "5");
                 } catch (IOException e) {
-
-                    Log.d("State ", "6");
+                    Log.d("Exception > ", "happened");
                 }
             }
         }
@@ -810,7 +793,13 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
     }
 
-    private boolean check_version(){
+    private int check_version(){
+        //the return value symbolizes the need to update ClassData
+        //and GroupsMap file. Higher value = higher need to update
+
+        int server_version = 0;
+        int local_version = 0;
+        boolean user_group_updated = false;
 
         // Creating service handler class instance
         ServiceHandler sh = new ServiceHandler();
@@ -820,13 +809,37 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         if(jsonStr != null){
             try {
                 JSONObject version_json = new JSONObject(jsonStr);
+                JSONObject internal_json = new JSONObject(loadJSONFromInternal("version.json"));
+                server_version = version_json.getInt("version");
+                local_version = internal_json.getInt("version");
+                JSONArray updates = version_json.getJSONArray("changedGroups");
+                for (int i=0; i<updates.length(); i++) {
+                    JSONArray groups = updates.getJSONArray(i);
+                    for (int j=0; j<groups.length(); j++) {
+                        if(groups.getString(j).equals(get_saved_group())){
+                            user_group_updated = true;
+                        }
+                    }
+                }
             } catch (JSONException e){
-                //do nothing
+                return 1; //just to update local files
             }
-
         }
+        if(server_version == local_version){
+            return 0;
+        }
+        else{
+            if(user_group_updated){
+                return 2;
+            }
+            else {
+                return 1;
+            }
+        }
+    }
 
-        return true;
+    private void pop_update_question(){
+        Toast.makeText(getApplicationContext(), "Your Timetable data is outdated", Toast.LENGTH_LONG).show();
     }
 }
 
