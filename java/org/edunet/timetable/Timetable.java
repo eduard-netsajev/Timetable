@@ -18,11 +18,14 @@ import android.view.MenuItem;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -83,10 +86,14 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
     private ProgressDialog pDialog;
 
-    // URL to get GroupsMap JSON
-    private final static String groups_map_url = "http://money.vnet.ee/GroupsMap.json";
-    private final static String class_data_url = "http://money.vnet.ee/ClassData.json";
-    private final static String TT_version_url = "http://money.vnet.ee/version.json";
+    // URL to get JSON files
+    private final String[] TTurl = {"http://money.vnet.ee/ClassData.json",
+                                    "http://money.vnet.ee/GroupsMap.json",
+                                    "http://money.vnet.ee/version.json"};
+
+    private final String[] filenames = {"ClassData.json",
+                                        "GroupsMap.json",
+                                        "version.json"};
 
     HashMap<String, HashMap<String, List<String>>> spinners_members = new HashMap<String, HashMap<String, List<String>>>();
     Map<String, List<String>> groups_map = null;
@@ -241,9 +248,8 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.random:
-                int page = 4;
-                mPager.setCurrentItem(page);
+            case R.id.update:
+                update_files();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -679,7 +685,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     private HashMap<String, Lesson> load_timetable(){
         HashMap<String, Lesson> temp_TimeTable = new HashMap<String, Lesson>();
         try{
-            JSONObject json_timetable = new JSONObject(loadJSONFromInternal("ClassData.json"));
+            JSONObject json_timetable = new JSONObject(loadJSONFromInternal(filenames[0]));
             //JSONObject json_timetable = new JSONObject(jsonStr2);
             @SuppressWarnings("unchecked")
             Iterator<String> nameItr = json_timetable.keys();
@@ -734,7 +740,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     }
 
     private void load_groups(){
-        String jsonStr = loadJSONFromInternal("GroupsMap.json");
+        String jsonStr = loadJSONFromInternal(filenames[1]);
         try {
             //Converting hashmap GroupsMap.json into Java object
             JSONObject GroupsMap = new JSONObject(jsonStr);
@@ -787,10 +793,9 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
     private void copy_assets_to_internal(){
         Context context = getApplicationContext();
-        copy_asset(context, "ClassData.json");
-        copy_asset(context, "GroupsMap.json");
-        copy_asset(context, "version.json");
-
+        for(String filename : filenames){
+            copy_asset(context, filename);
+        }
     }
 
     private int check_version(){
@@ -805,11 +810,11 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         ServiceHandler sh = new ServiceHandler();
 
         // Making a request to TT_version_url and getting response
-        String jsonStr = sh.makeServiceCall(TT_version_url, ServiceHandler.GET);
+        String jsonStr = sh.makeServiceCall(TTurl[2], ServiceHandler.GET);
         if(jsonStr != null){
             try {
                 JSONObject version_json = new JSONObject(jsonStr);
-                JSONObject internal_json = new JSONObject(loadJSONFromInternal("version.json"));
+                JSONObject internal_json = new JSONObject(loadJSONFromInternal(filenames[2]));
                 server_version = version_json.getInt("version");
                 local_version = internal_json.getInt("version");
                 JSONArray updates = version_json.getJSONArray("changedGroups");
@@ -840,6 +845,64 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
 
     private void pop_update_question(){
         Toast.makeText(getApplicationContext(), "Your Timetable data is outdated", Toast.LENGTH_LONG).show();
+    }
+
+    private void update_files(){
+        int outdated = check_version();
+        if(outdated > 0){
+        for(int i = 0; i < filenames.length; i++){
+            downloadFile(TTurl[i], filenames[i]);
+        }
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Your Timetable data is up to date", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public boolean downloadFile(final String path, final String filename)
+    {
+        try
+        {
+            URL url = new URL(path);
+
+            Context context = getApplicationContext();
+
+            URLConnection ucon = url.openConnection();
+            ucon.setReadTimeout(5000);
+            ucon.setConnectTimeout(10000);
+
+            InputStream is = ucon.getInputStream();
+            BufferedInputStream inStream = new BufferedInputStream(is, 1024 * 5);
+
+            File file = new File(context.getFilesDir() + "/" + filename);
+
+            if (file.exists())
+            {
+                file.delete();
+            }
+            file.createNewFile();
+
+            FileOutputStream outStream = new FileOutputStream(file);
+            byte[] buff = new byte[5 * 1024];
+
+            int len;
+            while ((len = inStream.read(buff)) != -1)
+            {
+                outStream.write(buff, 0, len);
+            }
+
+            outStream.flush();
+            outStream.close();
+            inStream.close();
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 }
 
