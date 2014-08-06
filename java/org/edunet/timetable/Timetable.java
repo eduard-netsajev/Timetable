@@ -61,8 +61,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     ///////////////
     //interface through which communication is made to fragment
     public FragmentCommunicator fragmentCommunicator;
-    // private CustomAdapter customAdapter;
-    public static ArrayList<Fragment> listFragments;
     //////////////
     TTableFragmentAdapter mAdapter;
     ViewPager mPager;
@@ -95,7 +93,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
                                         "GroupsMap.json",
                                         "version.json"};
 
-    HashMap<String, HashMap<String, List<String>>> spinners_members = new HashMap<String, HashMap<String, List<String>>>();
+    HashMap<String, HashMap<String, List<String>>> spinners_members;
     Map<String, List<String>> groups_map = null;
     HashMap<String, Lesson> TimeTable;
 
@@ -249,7 +247,7 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.update:
-                update_files();
+                new Update().execute();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -362,11 +360,15 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             String total_group = chosenFaculty + chosenProgram + chosenGroup;
             if(!total_group.equals(selectedGroup)){
                 selectedGroup = total_group;
-                ClassHashes = new ArrayList<String>(groups_map.get(total_group));
+                updateHashes();
                 UpdateList();
                 updateLockView();
             }
         }
+    }
+
+    private void updateHashes(){
+        ClassHashes = new ArrayList<String>(groups_map.get(selectedGroup));
     }
 
     public void UpdateList(){
@@ -391,6 +393,14 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         your_group.setText(selectedGroup);
 
         updateLockView();
+
+      /* TODO Need to bring into separated thread
+        int update_need = check_version();
+
+        if(update_need == 2){
+            pop_update_question();
+        }*/
+
     }
 
     public void load_group(){
@@ -764,6 +774,8 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
             e.printStackTrace();
         }
 
+        spinners_members = new HashMap<String, HashMap<String, List<String>>>();
+
         //chunk groups into hashmap of faculties, programs and groups in 1 iteration
         for (String group : groups){
             String faculty_name = group.substring(0, 1);
@@ -847,18 +859,6 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         Toast.makeText(getApplicationContext(), "Your Timetable data is outdated", Toast.LENGTH_LONG).show();
     }
 
-    private void update_files(){
-        int outdated = check_version();
-        if(outdated > 0){
-        for(int i = 0; i < filenames.length; i++){
-            downloadFile(TTurl[i], filenames[i]);
-        }
-        }
-        else{
-            Toast.makeText(getApplicationContext(), "Your Timetable data is up to date", Toast.LENGTH_LONG).show();
-        }
-    }
-
     public boolean downloadFile(final String path, final String filename)
     {
         try
@@ -903,6 +903,63 @@ public class Timetable extends FragmentActivity implements ActivityCommunicator{
         }
 
         return true;
+    }
+
+    public class Update extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Showing progress dialog
+
+            pDialog = new ProgressDialog(Timetable.this);
+            pDialog.setMessage("Please wait...");
+            pDialog.setCancelable(false);
+            pDialog.show();
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+
+            int outdated = check_version();
+            if(outdated > 0){
+                for(int i = 0; i < filenames.length; i++){
+                    downloadFile(TTurl[i], filenames[i]);
+                }
+            }
+
+            TimeTable = load_timetable();
+            load_groups();
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                   init_spinners();
+                }
+
+            });
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            /**
+             * Updating parsed JSON data into spinners
+             * */
+
+            // Dismiss the progress dialog
+            if (pDialog.isShowing()) {
+                pDialog.dismiss();
+
+                Toast.makeText(getApplicationContext(), "Your Timetable data is up to date", Toast.LENGTH_LONG).show();
+
+                load_group();
+                updateHashes();
+                UpdateList();
+            }
+        }
     }
 }
 
